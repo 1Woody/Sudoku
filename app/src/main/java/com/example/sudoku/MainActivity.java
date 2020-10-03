@@ -2,17 +2,14 @@ package com.example.sudoku;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ActionBar;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.TabHost;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -46,8 +43,7 @@ public class MainActivity extends AppCompatActivity {
                         bt.setText(String.valueOf(value));
                         if (correct()) {
                             tv.setText("");
-                        } else if(completed()){
-                            tv.setText("Congrats! I've WON");
+                            if (completed()) tv.setText("Congrats! I've WON");
                         } else{
                             tv.setText("There's a repeated digit!");
                         }
@@ -68,8 +64,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean correct(int i1, int j1, int i2, int j2){
-        //extra arrays to detect where are the errors and mark them red
-        //when its fixed by the user reset color to black
+        int[] errors = new int[9*2];
+        int it = 0;
+        boolean correct = true;
         boolean[] seen= new boolean[10];
         for (int i=0;i<=9; i++) seen[i]=false;
 
@@ -78,28 +75,39 @@ public class MainActivity extends AppCompatActivity {
                 int value = table[i][j].value;
                 if (value!=0) {
                     if (seen[value]){
-                        //table[i][j].bt.setTextColor(Color.RED);
-                        return false;
+                        errors[it] = i;
+                        errors[it+1] = j;
+                        it+=2;
+                        correct = false;
+                    }else {
+                        if (table[i][j].fixed) table[i][j].bt.setTextColor(Color.BLACK);
+                        else table[i][j].bt.setTextColor(Color.BLUE);
+                        seen[value] = true;
                     }
-                    seen[value] = true;
                 }
             }
         }
-        return true;
+        for (int i=0; i<it/2; i+=2){
+            table[errors[i]][errors[i+1]].bt.setTextColor(Color.RED);
+        }
+        return correct;
     }
 
     boolean correct(){
+        boolean correct = true;
         for (int i=0; i<9; i++)
-            if(!correct(i,0, i+1,9)) return false;
+            if(!correct(i,0, i+1,9)) correct = false;
         for (int j=0; j<9; j++)
-            if(!correct(0,j,9,j+1)) return false;
-        for(int i =0; i<3; i++)
-            for (int j=0; j<3; j++)
-                if(!correct(3*i,3*j,3*i+3, 3*j+3))
-                    return false;
-        return true;
+            if(!correct(0,j,9,j+1)) correct =  false;
+        for(int i =0; i<3; i++){
+            for (int j=0; j<3; j++){
+                if(!correct(3*i,3*j,3*i+3, 3*j+3)){
+                    correct = false;
+                }
+            }
+        }
+        return correct;
     }
-
 
     Cell[][] table;
     String input;
@@ -128,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
         reset.setText("Restart");
 
         table = new Cell[9][9];
-        //createSudoku(split, table);
         for (int i=0; i<9; i++){
             TableRow tr = new TableRow(this);
             for(int j=0; j<9; j++){
@@ -139,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
             }
             tl.addView(tr);
         }
-        restart(reset, split);
+        restart(reset);
         tl.setShrinkAllColumns(true);
         tl.setStretchAllColumns(true);
         tv= new TextView(this);
@@ -153,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(linlay);
     }
 
-    private void restart(Button bt, final String[] split){
+    private void restart(Button bt){
         bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -165,22 +172,10 @@ public class MainActivity extends AppCompatActivity {
                             finish = false;
                             tv.setText("");
                         }
+                        table[i][j].bt.setTextColor(Color.BLACK);
                     }
                 }
             }
         });
     }
-    /*
-    private void createSudoku(String[] split, Cell[][] table){
-        for (int i=0; i<9; i++){
-            TableRow tr = new TableRow(this);
-            for(int j=0; j<9; j++){
-                String s=split[i*9 + j];
-                char c = s.charAt(0);
-                table[i][j] = new Cell(c=='?'?0:c-'0', this);
-                tr.addView(table[i][j].bt);
-            }
-            tl.addView(tr);
-        }
-    }*/
 }
