@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
+
     private class Cell {
         int value;
         boolean fixed;
@@ -124,8 +125,7 @@ public class MainActivity extends AppCompatActivity {
     TextView tv;
     LinearLayout linlay;
     Button reset;
-
-    int actual;
+    int actual = 1;
     boolean finish;
     final String TAG = "SUDOKU ASSETS";
 
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         input ="";
-        actual = 2;
+        actual = getIntent().getIntExtra("EXTRA_INT", 1);
         readInput();
         Log.d(TAG, input);
         String[] split=input.split("[ ]+");
