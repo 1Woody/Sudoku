@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -13,6 +14,10 @@ import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,10 +69,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean correct(int i1, int j1, int i2, int j2){
-        int[] errors = new int[9*2];
-        int it = 0;
         boolean correct = true;
         boolean[] seen= new boolean[10];
+        int[] seeni = new int[10];
+        int[] seenj = new int[10];
         for (int i=0;i<=9; i++) seen[i]=false;
 
         for (int i=i1; i<i2; i++){
@@ -75,26 +80,29 @@ public class MainActivity extends AppCompatActivity {
                 int value = table[i][j].value;
                 if (value!=0) {
                     if (seen[value]){
-                        errors[it] = i;
-                        errors[it+1] = j;
-                        it+=2;
+                        table[seeni[value]][seenj[value]].bt.setTextColor(Color.RED);
+                        table[i][j].bt.setTextColor(Color.RED);
                         correct = false;
                     }else {
-                        if (table[i][j].fixed) table[i][j].bt.setTextColor(Color.BLACK);
-                        else table[i][j].bt.setTextColor(Color.BLUE);
                         seen[value] = true;
                     }
+                    seeni[value] = i;
+                    seenj[value] = j;
                 }
             }
-        }
-        for (int i=0; i<it/2; i+=2){
-            table[errors[i]][errors[i+1]].bt.setTextColor(Color.RED);
         }
         return correct;
     }
 
     boolean correct(){
         boolean correct = true;
+        for(int i =0; i<9; i++){
+            for (int j=0; j<9; j++){
+                Cell cell = table[i][j];
+                if (cell.fixed) cell.bt.setTextColor(Color.BLACK);
+                else cell.bt.setTextColor(Color.BLUE);
+            }
+        }
         for (int i=0; i<9; i++)
             if(!correct(i,0, i+1,9)) correct = false;
         for (int j=0; j<9; j++)
@@ -111,26 +119,24 @@ public class MainActivity extends AppCompatActivity {
 
     Cell[][] table;
     String input;
+    String sudoku;
     TableLayout tl;
     TextView tv;
     LinearLayout linlay;
     Button reset;
+
+    int actual;
     boolean finish;
+    final String TAG = "SUDOKU ASSETS";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        input=  "2 9 ? 7 4 3 8 6 1 " +
-                "4 ? 1 8 6 5 9 ? 7 " +
-                "8 7 6 1 9 2 5 4 3 " +
-                "3 8 7 4 5 9 2 1 6 " +
-                "6 1 2 3 ? 7 4 ? 5 " +
-                "? 4 9 2 ? 6 7 3 8 " +
-                "? ? 3 5 2 4 1 8 9 " +
-                "9 2 8 6 7 1 ? 5 4 " +
-                "1 5 4 9 3 ? 6 7 2 ";
-
-        String[] split=input.split(" ");
+        input ="";
+        actual = 2;
+        readInput();
+        Log.d(TAG, input);
+        String[] split=input.split("[ ]+");
         tl = new TableLayout(this);
         reset = new Button(this);
         reset.setText("Restart");
@@ -160,6 +166,47 @@ public class MainActivity extends AppCompatActivity {
         setContentView(linlay);
     }
 
+    private void readInput(){
+        listAssetSudokus(actual);
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new InputStreamReader(getAssets().open(sudoku)));
+            String line;
+            while ((line=reader.readLine()) != null) {
+                input += line + " ";
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private boolean listAssetSudokus(int actual){
+        String [] f = new String[0];
+        int i = 1;
+        try {
+            f = getAssets().list("");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        for(String f1 : f){
+            if (f1.contains("txt")){
+                if (i == actual){
+                    sudoku = f1;
+                    return true;
+                }else i++;
+                Log.v("Test names",f1);
+            }
+        }
+        return false;
+    }
+
     private void restart(Button bt){
         bt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -175,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
                         table[i][j].bt.setTextColor(Color.BLACK);
                     }
                 }
+
             }
         });
     }
