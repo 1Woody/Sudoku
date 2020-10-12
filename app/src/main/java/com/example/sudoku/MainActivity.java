@@ -1,8 +1,10 @@
 package com.example.sudoku;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -16,6 +18,10 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
@@ -128,18 +134,24 @@ public class MainActivity extends AppCompatActivity {
     int actual = 1;
     boolean finish;
     final String TAG = "SUDOKU ASSETS";
+    Button btSave;
+    Button btRestore;
+    String SudokuSave;
+    int save = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         input ="";
         actual = getIntent().getIntExtra("EXTRA_INT", 1);
+        save = getIntent().getIntExtra("EXTRA_INT_SAVE", 0);
+        SudokuSave = "SudokuSave"+ actual + ".txt";
         readInput();
         Log.d(TAG, input);
         String[] split=input.split("[ ]+");
         tl = new TableLayout(this);
         reset = new Button(this);
-        reset.setText("Restart");
+        reset.setText("Clear");
 
         table = new Cell[9][9];
         for (int i=0; i<9; i++){
@@ -152,6 +164,26 @@ public class MainActivity extends AppCompatActivity {
             }
             tl.addView(tr);
         }
+
+        //cargar juego modo easy
+        if(save != 0) RestoreAction();
+        btSave = new Button(this);
+        btSave.setText("SAVE");
+        btSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SaveAction();
+            }
+        });
+        btRestore = new Button(this);
+        btRestore.setText("RESTORE");
+        btRestore.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                RestoreAction();
+            }
+        });
+
         restart(reset);
         tl.setShrinkAllColumns(true);
         tl.setStretchAllColumns(true);
@@ -160,6 +192,8 @@ public class MainActivity extends AppCompatActivity {
         linlay= new LinearLayout(this);
         linlay.addView(tl);
         linlay.addView(reset);
+        linlay.addView(btSave);
+        linlay.addView(btRestore);
         linlay.addView(tv);
         linlay.setOrientation(LinearLayout.VERTICAL);
         linlay.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -175,7 +209,6 @@ public class MainActivity extends AppCompatActivity {
             while ((line=reader.readLine()) != null) {
                 input += line + " ";
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -207,6 +240,58 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    private void SaveAction(){
+        String text="";
+        for (int i = 0; i<9; i++){
+            for(int j = 0; j<9; j++){
+                Cell cell=table[i][j];
+                if (j>0) text+=" ";
+                text+=String.valueOf(cell.value);
+            }
+            text += "\n";
+        }
+        File file = new File(getFilesDir(),SudokuSave);
+        try {
+            FileWriter writer= new FileWriter(file);
+            writer.append(text);
+            writer.flush();
+            writer.close();
+        } catch (IOException e1){
+            e1.printStackTrace();
+        }
+    }
+
+    private boolean RestoreAction(){
+        String text="";
+        File file = new File(getFilesDir(),SudokuSave);
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line;
+            while ((line=reader.readLine()) != null){
+                text+=line+"\n";
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            MessageError();
+            return false;
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+        String[] array = text.split("[ \n]+");
+        for (int i = 0; i<9; i++) {
+            for (int j = 0; j < 9; j++) {
+                Cell cell = table[i][j];
+                cell.value = Integer.parseInt(array[i * 9 + j]);
+                if (cell.value == 0) {
+                    cell.bt.setText("");
+                } else {
+                    cell.bt.setText(String.valueOf(cell.value));
+                }
+            }
+        }
+        return true;
+    }
+
     private void restart(Button bt){
         bt.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -225,5 +310,25 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void MessageError(){
+        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        alertDialog.setTitle("Caution");
+        alertDialog.setMessage("No saved game detected");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "SAVE",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        SaveAction();
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
     }
 }

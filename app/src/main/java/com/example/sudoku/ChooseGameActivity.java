@@ -1,8 +1,10 @@
 package com.example.sudoku;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -25,8 +27,8 @@ public class ChooseGameActivity extends AppCompatActivity {
     LinearLayout linlay, linlay2;
     TextView tv,tv2;
     Button bteasy, btmedium, bthard;
-    boolean resumestate = false;
-    Button btresume, btsave1, btsave2, btsave3;
+    boolean loadstate = false;
+    Button btload, btsave1, btsave2, btsave3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,12 +42,12 @@ public class ChooseGameActivity extends AppCompatActivity {
         btmedium.setText("MEDIUM");
         bthard = new Button(this);
         bthard.setText("HARD");
-        btresume = new Button(this);
-        btresume.setText("LOAD");
+        btload = new Button(this);
+        btload.setText("LOAD");
 
         linlay2 = new LinearLayout(this);
         tv2 = new TextView(this);
-        tv2.setText("CHOOSE SAVED GAME");
+        tv2.setText("SAVED GAMES");
         tv2.setTextSize(25);
         btsave1 = new Button(this);
         btsave1.setText("SAVE1");
@@ -66,7 +68,7 @@ public class ChooseGameActivity extends AppCompatActivity {
         linlay.addView(bteasy);
         linlay.addView(btmedium);
         linlay.addView(bthard);
-        linlay.addView(btresume);
+        linlay.addView(btload);
         linlay.addView(linlay2);
         linlay.setOrientation(LinearLayout.VERTICAL);
         linlay.setGravity(Gravity.CENTER_HORIZONTAL);
@@ -76,17 +78,17 @@ public class ChooseGameActivity extends AppCompatActivity {
     }
 
     public void Buttonfunctions(){
-        btresume.setOnClickListener(new View.OnClickListener() {
+        btload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!resumestate){
+                if (!loadstate){
                     linlay2.setVisibility(View.VISIBLE);
-                    btresume.setText("BACK");
+                    btload.setText("BACK");
                 } else {
                     linlay2.setVisibility(View.GONE);
-                    btresume.setText("LOAD");
+                    btload.setText("LOAD");
                 }
-                resumestate = !resumestate;
+                loadstate = !loadstate;
             }
         });
         bteasy.setOnClickListener(new View.OnClickListener() {
@@ -115,10 +117,62 @@ public class ChooseGameActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        btsave1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listSavedSudokus(1)){
+                    Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
+                    intent.putExtra("EXTRA_INT", 1);
+                    intent.putExtra("EXTRA_INT_SAVE", 1);
+                    startActivity(intent);
+                } else {
+                    MessageError();
+                }
+            }
+        });
+        btsave2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listSavedSudokus(2)){
+                    Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
+                    intent.putExtra("EXTRA_INT", 2);
+                    intent.putExtra("EXTRA_INT_SAVE", 2);
+                    startActivity(intent);
+                } else {
+                    MessageError();
+                }
+            }
+        });
+        btsave3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (listSavedSudokus(3)){
+                    Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
+                    intent.putExtra("EXTRA_INT", 3);
+                    intent.putExtra("EXTRA_INT_SAVE", 3);
+                    startActivity(intent);
+                } else {
+                    MessageError();
+                }
+            }
+        });
+    }
+
+    private boolean listSavedSudokus(int actual){
+        String [] f;
+        String SudokuSave = "SudokuSave"+ actual + ".txt";
+        f = getFilesDir().list();
+        assert f != null;
+        for(String f1 : f){
+            if (f1.contains(SudokuSave)){
+                Log.v("Test names",f1);
+                return true;
+            }
+        }
+        return false;
     }
 
     public void Design(){
-
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -129,8 +183,21 @@ public class ChooseGameActivity extends AppCompatActivity {
         bteasy.setLayoutParams(params);
         btmedium.setLayoutParams(params);
         bthard.setLayoutParams(params);
-        btresume.setLayoutParams(params);
+        btload.setLayoutParams(params);
 
+    }
+
+    private void MessageError(){
+        AlertDialog alertDialog = new AlertDialog.Builder(ChooseGameActivity.this).create();
+        alertDialog.setTitle("Caution");
+        alertDialog.setMessage("No saved game detected");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
     }
 
 }
