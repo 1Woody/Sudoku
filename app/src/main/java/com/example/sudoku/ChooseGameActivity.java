@@ -26,48 +26,58 @@ public class ChooseGameActivity extends AppCompatActivity {
 
     LinearLayout linlay, linlay2;
     TextView tv,tv2;
-    Button bteasy, btmedium, bthard;
+    Button  btload, bteasy, btmedium, bthard;
     boolean loadstate = false;
-    Button btload, btsave1, btsave2, btsave3;
+
+    private class ButtonMenu{
+        Button bt;
+        int actual;
+        public ButtonMenu(String text, final int type, int actualin, Context THIS){
+            actual = actualin;
+            bt = new Button(THIS);
+            bt.setText(text);
+            bt.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    boolean start = true;
+                    Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
+                    intent.putExtra("EXTRA_INT", actual);
+                    if (type == 1) {
+                        if (listSavedSudokus(actual)) intent.putExtra("EXTRA_INT_SAVE", actual);
+                        else start = false;
+                    }
+                    if (start) startActivity(intent);
+                    else MessageError();
+                }
+            });
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String[] listnames = {"EASY","MEDIUM","HARD","SAVE1","SAVE2","SAVE3"};
         linlay = new LinearLayout(this);
+        linlay2 = new LinearLayout(this);
         tv = new TextView(this);
         tv.setText("CHOOSE GAME");
-        bteasy = new Button(this);
-        bteasy.setText("EASY");
-        btmedium = new Button(this);
-        btmedium.setText("MEDIUM");
-        bthard = new Button(this);
-        bthard.setText("HARD");
-        btload = new Button(this);
-        btload.setText("LOAD");
-
-        linlay2 = new LinearLayout(this);
         tv2 = new TextView(this);
         tv2.setText("SAVED GAMES");
         tv2.setTextSize(25);
-        btsave1 = new Button(this);
-        btsave1.setText("SAVE1");
-        btsave2 = new Button(this);
-        btsave2.setText("SAVE2");
-        btsave3 = new Button(this);
-        btsave3.setText("SAVE3");
+        btload = new Button(this);
+        btload.setText("LOAD");
+
         linlay2.addView(tv2);
-        linlay2.addView(btsave1);
-        linlay2.addView(btsave2);
-        linlay2.addView(btsave3);
         linlay2.setVisibility(View.GONE);
-        Design();
-        Buttonfunctions();
+        //Design();
+        ButtonLoad();
         tv.setTextSize(30);
         linlay= new LinearLayout(this);
         linlay.addView(tv);
-        linlay.addView(bteasy);
-        linlay.addView(btmedium);
-        linlay.addView(bthard);
+        for (int i=0, j=3; i<3; i++,j++){
+            linlay.addView((new ButtonMenu(listnames[i],0,i+1,this)).bt);
+            linlay2.addView((new ButtonMenu(listnames[j],1,i+1,this)).bt);
+        }
         linlay.addView(btload);
         linlay.addView(linlay2);
         linlay.setOrientation(LinearLayout.VERTICAL);
@@ -77,7 +87,7 @@ public class ChooseGameActivity extends AppCompatActivity {
         setContentView(linlay);
     }
 
-    public void Buttonfunctions(){
+    public void ButtonLoad(){
         btload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -89,71 +99,6 @@ public class ChooseGameActivity extends AppCompatActivity {
                     btload.setText("LOAD");
                 }
                 loadstate = !loadstate;
-            }
-        });
-        bteasy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
-                intent.putExtra("EXTRA_INT", 1);
-                startActivity(intent);
-            }
-        });
-
-        btmedium.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
-                intent.putExtra("EXTRA_INT", 2);
-                startActivity(intent);
-            }
-        });
-
-        bthard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
-                intent.putExtra("EXTRA_INT", 3);
-                startActivity(intent);
-            }
-        });
-        btsave1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listSavedSudokus(1)){
-                    Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
-                    intent.putExtra("EXTRA_INT", 1);
-                    intent.putExtra("EXTRA_INT_SAVE", 1);
-                    startActivity(intent);
-                } else {
-                    MessageError();
-                }
-            }
-        });
-        btsave2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listSavedSudokus(2)){
-                    Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
-                    intent.putExtra("EXTRA_INT", 2);
-                    intent.putExtra("EXTRA_INT_SAVE", 2);
-                    startActivity(intent);
-                } else {
-                    MessageError();
-                }
-            }
-        });
-        btsave3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (listSavedSudokus(3)){
-                    Intent intent = new Intent(ChooseGameActivity.this, MainActivity.class);
-                    intent.putExtra("EXTRA_INT", 3);
-                    intent.putExtra("EXTRA_INT_SAVE", 3);
-                    startActivity(intent);
-                } else {
-                    MessageError();
-                }
             }
         });
     }
@@ -172,20 +117,6 @@ public class ChooseGameActivity extends AppCompatActivity {
         return false;
     }
 
-    public void Design(){
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.setMargins(0, 30, 0, 0);
-        linlay2.setLayoutParams(params);
-        tv.setLayoutParams(params);
-        bteasy.setLayoutParams(params);
-        btmedium.setLayoutParams(params);
-        bthard.setLayoutParams(params);
-        btload.setLayoutParams(params);
-
-    }
 
     private void MessageError(){
         AlertDialog alertDialog = new AlertDialog.Builder(ChooseGameActivity.this).create();
@@ -200,4 +131,18 @@ public class ChooseGameActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
+    // Not implemented (still have to mix-it with the MenuButton Class)
+    public void Design(){
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 30, 0, 0);
+        linlay2.setLayoutParams(params);
+        tv.setLayoutParams(params);
+        bteasy.setLayoutParams(params);
+        btmedium.setLayoutParams(params);
+        bthard.setLayoutParams(params);
+        btload.setLayoutParams(params);
+    }
 }
